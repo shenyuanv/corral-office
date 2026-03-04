@@ -248,6 +248,71 @@ class TestAgentExtraction(unittest.TestCase):
         parsed = parse_timestamp(agent["updated_at"])
         self.assertIsNotNone(parsed)
 
+    def test_extract_with_real_lasso_field_names(self):
+        """Test extraction with real lasso field names: agent, status, issueTitle, prNumber, repo."""
+        session = {
+            "status": "pr_open",
+            "agent": "claude",
+            "issue": 42,
+            "issueTitle": "Fix authentication bug",
+            "prNumber": 1234,
+            "repo": "shenyuanv/corral-office",
+            "updated_at": "2026-03-05T12:30:45"
+        }
+        agent = extract_agent_info("corral-office-1", session)
+
+        self.assertEqual(agent["agentId"], "corral-office-1")
+        self.assertEqual(agent["name"], "Claude #42")
+        self.assertEqual(agent["state"], "syncing")
+        self.assertEqual(agent["detail"], "PR #1234")
+        self.assertEqual(agent["source"], "lasso")
+
+    def test_extract_with_issue_number_as_int(self):
+        """Test that issue numbers work as integers (real lasso format)."""
+        session = {
+            "status": "working",
+            "agent": "codex",
+            "issue": 99,
+            "issueTitle": "Implement feature",
+            "updated_at": "2026-03-05T12:30:45"
+        }
+        agent = extract_agent_info("session-codex", session)
+
+        self.assertEqual(agent["name"], "Codex #99")
+        self.assertEqual(agent["state"], "writing")
+
+    def test_extract_prefers_real_field_names(self):
+        """Test that real field names take precedence over test field names."""
+        session = {
+            "status": "working",  # Real format
+            "state": "idle",      # Old format (should be ignored)
+            "agent": "claude",    # Real format
+            "agent_type": "Bot",  # Old format (should be ignored)
+            "issue": 42,
+            "issueTitle": "Real title",  # Real format
+            "issue_title": "Old title",   # Old format (should be ignored)
+            "updated_at": "2026-03-05T12:30:45"
+        }
+        agent = extract_agent_info("session-pref", session)
+
+        self.assertEqual(agent["name"], "Claude #42")
+        self.assertEqual(agent["state"], "writing")  # From "status": "working"
+
+    def test_extract_fallback_to_old_format_if_no_real_format(self):
+        """Test backwards compatibility: use old format if real format not present."""
+        session = {
+            "state": "working",  # Old format
+            "agent_type": "Claude",  # Old format
+            "issue": "42",
+            "issue_title": "Old format title",
+            "updated_at": "2026-03-05T12:30:45"
+        }
+        agent = extract_agent_info("session-old", session)
+
+        self.assertEqual(agent["name"], "Claude #42")
+        self.assertEqual(agent["state"], "writing")
+        self.assertEqual(agent["detail"], "Old format title")
+
 
 class TestSessionProcessing(unittest.TestCase):
     """Test full session processing pipeline."""
@@ -379,6 +444,45 @@ class TestFileIO(unittest.TestCase):
         try:
             result = load_sessions_json(temp_path)
             self.assertEqual(result, {})
+        finally:
+            os.unlink(temp_path)
+
+    def test_load_with_sessions_wrapper_key(self):
+        """Test loading real lasso format with 'sessions' wrapper key."""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            data = {
+                "sessions": {
+                    "session-1": {"state": "working"},
+                    "session-2": {"state": "idle"}
+                }
+            }
+            json.dump(data, f)
+            temp_path = f.name
+
+        try:
+            result = load_sessions_json(temp_path)
+            # Should unwrap the "sessions" key
+            self.assertEqual(result, {
+                "session-1": {"state": "working"},
+                "session-2": {"state": "idle"}
+            })
+        finally:
+            os.unlink(temp_path)
+
+    def test_load_flat_format_without_wrapper(self):
+        """Test loading flat format without wrapper (backwards compatibility)."""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            data = {
+                "session-1": {"state": "working"},
+                "session-2": {"state": "idle"}
+            }
+            json.dump(data, f)
+            temp_path = f.name
+
+        try:
+            result = load_sessions_json(temp_path)
+            # Should return as-is
+            self.assertEqual(result, data)
         finally:
             os.unlink(temp_path)
 
