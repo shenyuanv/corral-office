@@ -1,0 +1,30 @@
+{
+  "session-001-working": {
+    "id": "session-001-working",
+    "agent_type": "Claude",
+    "issue": "42",
+    "issue_title": "Implement user authentication",
+    "state": "working",
+    "timestamp": "2026-03-05T12:30:00",
+    "updated_at": "2026-03-05T12:35:00"
+  },
+  "session-002-pr_open": {
+    "id": "session-002-pr_open",
+    "agent_type": "Claude",
+    "issue": "43",
+    "issue_title": "Add dark mode support",
+    "state": "pr_open",
+    "pr_status": "Awaiting code review",
+    "timestamp": "2026-03-05T11:00:00",
+    "updated_at": "2026-03-05T12:20:00"
+  },
+  "session-003-exited": {
+    "id": "session-003-exited",
+    "agent_type": "Claude",
+    "issue": "44",
+    "issue_title": "Fix database connection",
+    "state": "exited",
+    "timestamp": "2026-03-05T10:00:00",
+    "updated_at": "2026-03-05T12:15:00"
+  }
+}
