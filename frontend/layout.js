@@ -129,5 +129,5 @@ const LAYOUT = {
   },
 
   // === 总资源数量（用于加载进度条） ===
-  totalAssets: 15
+  totalAssets: 27  // 15 original + 12 guest sprites (6 anim + 6 role)
 };

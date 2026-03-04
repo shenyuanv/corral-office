@@ -200,8 +200,10 @@ const CAT_BUBBLE_INTERVAL = 18000;
 let lastCatBubble = 0;
 const TYPEWRITER_DELAY = 50;
 let agents = {}; // agentId -> sprite/container
+let agentMovement = {}; // agentId -> { targetX, targetY, startX, startY, progress, spriteIndex }
 let lastAgentsFetch = 0;
 const AGENTS_FETCH_INTERVAL = 2500;
+const AGENT_MOVE_DURATION = 800; // 毫秒，agent 移动时间
 
 // agent 颜色配置
 const AGENT_COLORS = {
@@ -220,26 +222,58 @@ const NAME_TAG_COLORS = {
   default: 0x1f2937
 };
 
+// agent 类型颜色配置
+const AGENT_TYPE_COLORS = {
+  codex: { tint: 0x22c55e, nameColor: 0x16a34a, label: 'Codex' },      // 绿色
+  claude: { tint: 0xf59e0b, nameColor: 0xd97706, label: 'Claude' },    // 橙色
+  default: { tint: 0x94a3b8, nameColor: 0x64748b, label: 'Unknown' }   // 灰色
+};
+
+// agent 类型到精灵映射
+const AGENT_TYPE_SPRITE_MAP = {
+  codex: 1,    // Codex 使用精灵 1
+  claude: 2,   // Claude 使用精灵 2
+  default: 3   // 未知类型使用精灵 3
+};
+
 // breakroom / writing / error 区域的 agent 分布位置（多 agent 时错开）
+// 每个区域有多个位置，可以支持更多 agent 同时显示而不重叠
 const AREA_POSITIONS = {
   breakroom: [
     { x: 620, y: 180 },
     { x: 560, y: 220 },
-    { x: 680, y: 210 }
+    { x: 680, y: 210 },
+    { x: 600, y: 250 },
+    { x: 700, y: 240 },
+    { x: 540, y: 160 }
   ],
   writing: [
     { x: 760, y: 320 },
     { x: 830, y: 280 },
-    { x: 690, y: 350 }
+    { x: 690, y: 350 },
+    { x: 800, y: 350 },
+    { x: 720, y: 290 },
+    { x: 650, y: 320 }
   ],
   error: [
     { x: 180, y: 260 },
     { x: 120, y: 220 },
-    { x: 240, y: 230 }
+    { x: 240, y: 230 },
+    { x: 160, y: 200 },
+    { x: 220, y: 280 },
+    { x: 100, y: 260 }
+  ],
+  researching: [
+    { x: 320, y: 320 },
+    { x: 280, y: 280 },
+    { x: 360, y: 290 },
+    { x: 300, y: 360 },
+    { x: 380, y: 350 },
+    { x: 260, y: 350 }
   ]
 };
 
-let areaPositionCounters = { breakroom: 0, writing: 0, error: 0 };
+let areaPositionCounters = { breakroom: 0, writing: 0, error: 0, researching: 0 };
 
 
 // 状态控制栏函数（用于测试）
@@ -307,6 +341,12 @@ function preload() {
   // 新办公桌：强制 PNG（透明）
   this.load.image('desk_v2', '/static/desk-v2.png');
   this.load.spritesheet('flowers', '/static/flowers-spritesheet' + (supportsWebP ? '.webp' : '.png'), { frameWidth: 65, frameHeight: 65 });
+
+  // 加载 guest 精灵（动画 + 静态）
+  for (let i = 1; i <= 6; i++) {
+    this.load.spritesheet(`guest_anim_${i}`, `/static/guest_anim_${i}.webp`, { frameWidth: 128, frameHeight: 128 });
+    this.load.image(`guest_role_${i}`, `/static/guest_role_${i}.png`);
+  }
 }
 
 function create() {
@@ -486,6 +526,16 @@ function create() {
     repeat: -1
   });
 
+  // 创建 guest 精灵动画
+  for (let i = 1; i <= 6; i++) {
+    this.anims.create({
+      key: `guest_walk_${i}`,
+      frames: this.anims.generateFrameNumbers(`guest_anim_${i}`, { start: 0, end: 7 }),
+      frameRate: 10,
+      repeat: -1
+    });
+  }
+
   // === 错误 bug（来自 LAYOUT）===
   const errorBug = this.add.sprite(
     LAYOUT.furniture.errorBug.x,
@@ -553,43 +603,15 @@ function create() {
 
   loadMemo();
   fetchStatus();
-  // 先强制加一个测试用的尼卡 agent 渲染
-  const testNika = {
-    agentId: 'agent_nika',
-    name: '尼卡',
-    isMain: false,
-    state: 'writing',
-    detail: '在画像素画...',
-    area: 'writing',
-    authStatus: 'approved',
-    updated_at: new Date().toISOString()
-  };
-  renderAgent(testNika);
   fetchAgents();
-
-  // 测试用：让尼卡模拟走来走去
-  window.testNikaState = 'writing';
-  window.testNikaTimer = setInterval(() => {
-    const states = ['idle', 'writing', 'researching', 'executing'];
-    const areas = { idle: 'breakroom', writing: 'writing', researching: 'writing', executing: 'writing' };
-    window.testNikaState = states[Math.floor(Math.random() * states.length)];
-    const testAgent = {
-      agentId: 'agent_nika',
-      name: '尼卡',
-      isMain: false,
-      state: window.testNikaState,
-      detail: '在画像素画...',
-      area: areas[window.testNikaState],
-      authStatus: 'approved',
-      updated_at: new Date().toISOString()
-    };
-    renderAgent(testAgent);
-  }, 5000);
 }
 
 function update(time) {
   if (time - lastFetch > FETCH_INTERVAL) { fetchStatus(); lastFetch = time; }
   if (time - lastAgentsFetch > AGENTS_FETCH_INTERVAL) { fetchAgents(); lastAgentsFetch = time; }
+
+  // 更新 agent 运动
+  updateAgentMovement();
 
   const effectiveStateForServer = pendingDesiredState || currentState;
   if (serverroom) {
@@ -914,9 +936,70 @@ function getAreaPosition(area) {
   return positions[idx];
 }
 
+function updateAgentMovement() {
+  const now = Date.now();
+
+  for (let agentId in agentMovement) {
+    const movement = agentMovement[agentId];
+    if (!agents[agentId]) continue;
+
+    const container = agents[agentId];
+
+    // 计算进度
+    if (movement.startTime !== undefined) {
+      const elapsed = now - movement.startTime;
+      movement.progress = Math.min(1, elapsed / AGENT_MOVE_DURATION);
+    }
+
+    if (movement.progress < 1) {
+      // 使用缓动函数平滑移动
+      const easeProgress = movement.progress < 0.5
+        ? 2 * movement.progress * movement.progress
+        : -1 + (4 - 2 * movement.progress) * movement.progress;
+
+      const x = movement.startX + (movement.targetX - movement.startX) * easeProgress;
+      const y = movement.startY + (movement.targetY - movement.startY) * easeProgress;
+
+      container.setPosition(x, y);
+
+      // 显示走路动画
+      const sprite = container.getAt(0);
+      if (sprite && sprite.name === 'agentSprite') {
+        const spriteIndex = movement.spriteIndex || 1;
+        const animKey = `guest_walk_${spriteIndex}`;
+        if (!sprite.anims.isPlaying) {
+          sprite.anims.play(animKey, true);
+        }
+      }
+    } else {
+      // 移动完成，回到静态图片
+      container.setPosition(movement.targetX, movement.targetY);
+      const sprite = container.getAt(0);
+      if (sprite && sprite.name === 'agentSprite') {
+        if (sprite.anims.isPlaying) {
+          sprite.anims.stop();
+        }
+        const spriteIndex = movement.spriteIndex || 1;
+        const roleKey = `guest_role_${spriteIndex}`;
+        if (sprite.texture.key !== roleKey) {
+          sprite.setTexture(roleKey);
+        }
+      }
+    }
+  }
+}
+
+function getAgentSpriteIndex(agentId, agentType) {
+  // 基于 agent 类型返回精灵索引（1-6）
+  const typeKey = (agentType || '').toLowerCase();
+  const spriteIndex = AGENT_TYPE_SPRITE_MAP[typeKey] || AGENT_TYPE_SPRITE_MAP.default;
+  return spriteIndex;
+}
+
 function renderAgent(agent) {
   const agentId = agent.agentId;
   const name = agent.name || 'Agent';
+  const agentType = (agent.agentType || 'unknown').toLowerCase();
   const area = agent.area || 'breakroom';
   const authStatus = agent.authStatus || 'pending';
   const isMain = !!agent.isMain;
@@ -926,9 +1009,11 @@ function renderAgent(agent) {
   const baseX = pos.x;
   const baseY = pos.y;
 
-  // 颜色
-  const bodyColor = AGENT_COLORS[agentId] || AGENT_COLORS.default;
-  const nameColor = NAME_TAG_COLORS[authStatus] || NAME_TAG_COLORS.default;
+  // 获取 agent 类型颜色配置
+  const typeConfig = AGENT_TYPE_COLORS[agentType] || AGENT_TYPE_COLORS.default;
+  const nameColor = typeConfig.nameColor;
+  const spriteTint = typeConfig.tint;
+  const spriteIndex = getAgentSpriteIndex(agentId, agentType);
 
   // 透明度（离线/待批准/拒绝时变半透明）
   let alpha = 1;
@@ -939,51 +1024,110 @@ function renderAgent(agent) {
   if (!agents[agentId]) {
     // 新建 agent
     const container = game.add.container(baseX, baseY);
-    container.setDepth(1200 + (isMain ? 100 : 0)); // 放到最顶层！
+    container.setDepth(1200 + (isMain ? 100 : 0));
 
-    // 像素小人：用星星图标，更明显
-    const starIcon = game.add.text(0, 0, '⭐', {
-      fontFamily: 'ArkPixel, monospace',
-      fontSize: '32px'
-    }).setOrigin(0.5);
-    starIcon.name = 'starIcon';
+    // 使用像素精灵（静态角色图片作为默认）
+    const spriteKey = `guest_role_${spriteIndex}`;
+    const sprite = game.add.image(0, 0, spriteKey)
+      .setOrigin(0.5)
+      .setTint(spriteTint)
+      .setAlpha(alpha)
+      .setScale(1.0);
+    sprite.name = 'agentSprite';
+
+    // 保存精灵信息用于后续更新
+    container._agentData = {
+      agentType,
+      spriteIndex,
+      currentSprite: spriteKey,
+      currentArea: area
+    };
 
     // 名字标签（漂浮）
-    const nameTag = game.add.text(0, -36, name, {
+    const nameTag = game.add.text(0, -50, name, {
       fontFamily: 'ArkPixel, monospace',
-      fontSize: '14px',
+      fontSize: '12px',
       fill: '#' + nameColor.toString(16).padStart(6, '0'),
       stroke: '#000',
-      strokeThickness: 3,
-      backgroundColor: 'rgba(255,255,255,0.95)'
+      strokeThickness: 2,
+      backgroundColor: 'rgba(255,255,255,0.9)',
+      padding: { x: 4, y: 2 }
     }).setOrigin(0.5);
     nameTag.name = 'nameTag';
 
-    // 状态小点（绿色/黄色/红色）
+    // 状态小点（代表 authStatus）
     let dotColor = 0x64748b;
     if (authStatus === 'approved') dotColor = 0x22c55e;
     if (authStatus === 'pending') dotColor = 0xf59e0b;
     if (authStatus === 'rejected') dotColor = 0xef4444;
     if (authStatus === 'offline') dotColor = 0x94a3b8;
-    const statusDot = game.add.circle(20, -20, 5, dotColor, alpha);
-    statusDot.setStrokeStyle(2, 0x000000, alpha);
+    const statusDot = game.add.circle(16, -30, 4, dotColor, alpha);
+    statusDot.setStrokeStyle(1, 0x000000, alpha);
     statusDot.name = 'statusDot';
 
-    container.add([starIcon, statusDot, nameTag]);
+    container.add([sprite, statusDot, nameTag]);
     agents[agentId] = container;
+
+    // 初始化运动状态
+    agentMovement[agentId] = { targetX: baseX, targetY: baseY, progress: 1, spriteIndex };
   } else {
     // 更新 agent
     const container = agents[agentId];
-    container.setPosition(baseX, baseY);
+    const oldData = container._agentData || {};
+    const areaChanged = oldData.currentArea !== area;
+    const spriteChanged = oldData.spriteIndex !== spriteIndex;
+
+    // 如果位置变化，触发移动动画
+    if (areaChanged) {
+      const currentX = container.x;
+      const currentY = container.y;
+      agentMovement[agentId] = {
+        targetX: baseX,
+        targetY: baseY,
+        startX: currentX,
+        startY: currentY,
+        progress: 0,
+        spriteIndex,
+        startTime: Date.now()
+      };
+      oldData.currentArea = area;
+    } else {
+      // 更新目标位置（以防 AREA_POSITIONS 变化）
+      if (!agentMovement[agentId]) {
+        agentMovement[agentId] = { targetX: baseX, targetY: baseY, progress: 1, spriteIndex };
+      }
+    }
+
     container.setAlpha(alpha);
     container.setDepth(1200 + (isMain ? 100 : 0));
 
-    // 更新名字和颜色（如果变化）
+    // 更新精灵（如果类型变化）
+    if (spriteChanged) {
+      const sprite = container.getAt(0);
+      if (sprite && sprite.name === 'agentSprite') {
+        const newSpriteKey = `guest_role_${spriteIndex}`;
+        sprite.setTexture(newSpriteKey).setTint(spriteTint);
+        container._agentData.spriteIndex = spriteIndex;
+        container._agentData.currentSprite = newSpriteKey;
+        if (agentMovement[agentId]) {
+          agentMovement[agentId].spriteIndex = spriteIndex;
+        }
+      }
+    } else {
+      // 更新 tint（如果颜色需要调整）
+      const sprite = container.getAt(0);
+      if (sprite && sprite.name === 'agentSprite') {
+        sprite.setTint(spriteTint);
+      }
+    }
+
+    // 更新名字和颜色
     const nameTag = container.getAt(2);
     if (nameTag && nameTag.name === 'nameTag') {
       nameTag.setText(name);
-      nameTag.setFill('#' + (NAME_TAG_COLORS[authStatus] || NAME_TAG_COLORS.default).toString(16).padStart(6, '0'));
+      nameTag.setFill('#' + nameColor.toString(16).padStart(6, '0'));
     }
+
     // 更新状态点颜色
     const statusDot = container.getAt(1);
     if (statusDot && statusDot.name === 'statusDot') {
@@ -992,7 +1136,7 @@ function renderAgent(agent) {
       if (authStatus === 'pending') dotColor = 0xf59e0b;
       if (authStatus === 'rejected') dotColor = 0xef4444;
       if (authStatus === 'offline') dotColor = 0x94a3b8;
-      statusDot.fillColor = dotColor;
+      statusDot.setFillStyle(dotColor, alpha);
     }
   }
 }
