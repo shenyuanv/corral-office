@@ -51,13 +51,21 @@ TERMINAL_STATE_VISIBLE_DURATION = 5 * 60  # 5 minutes in seconds
 
 
 def load_sessions_json(path: str) -> Dict[str, Any]:
-    """Load sessions.json, returning empty dict if file doesn't exist or is malformed."""
+    """Load sessions.json, returning empty dict if file doesn't exist or is malformed.
+
+    Handles both formats:
+    - Real lasso format: {"sessions": {"session-id": {...}, ...}}
+    - Flat format: {"session-id": {...}, ...}
+    """
     try:
         if not os.path.exists(path):
             return {}
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
             if isinstance(data, dict):
+                # Unwrap "sessions" key if present (real lasso format)
+                if "sessions" in data and isinstance(data["sessions"], dict):
+                    return data["sessions"]
                 return data
     except (json.JSONDecodeError, OSError) as e:
         print(f"Warning: Failed to load {path}: {e}", file=sys.stderr)
@@ -125,6 +133,10 @@ def map_lasso_state(lasso_state: str) -> tuple[str, str]:
 def extract_agent_info(session_id: str, session: Dict[str, Any]) -> Dict[str, Any]:
     """Extract and transform agent info from a lasso session.
 
+    Handles both real lasso field names and adapter test field names:
+    - Real: agent, status, issueTitle, prNumber, repo
+    - Test: agent_type, state, issue_title, pr_status
+
     Args:
         session_id: The session ID from sessions.json
         session: The session object from sessions.json
@@ -132,20 +144,37 @@ def extract_agent_info(session_id: str, session: Dict[str, Any]) -> Dict[str, An
     Returns:
         Agent info dict for agents-state.json
     """
-    lasso_state = session.get("state", "")
+    # Handle both "status" and "state" field names - prefer "status" (real format)
+    lasso_state = session.get("status") or session.get("state", "")
     office_state, office_area = map_lasso_state(lasso_state)
 
-    # Extract agent info - could be "Claude #42", "Researcher", etc.
-    agent_type = session.get("agent_type", "Agent")
+    # Extract agent type - could be "claude", "codex", or full name like "Claude", "Agent"
+    # Real lasso uses "agent" field, test data uses "agent_type" - prefer real format
+    agent_type = session.get("agent") or session.get("agent_type", "Agent")
+
+    # Normalize agent type for display (capitalize if not already)
+    if isinstance(agent_type, str):
+        agent_type = agent_type.capitalize() if agent_type.lower() in ("claude", "codex") else agent_type
+
+    # Extract issue number - real lasso has "issue" as number
     issue_num = session.get("issue", "")
+    if issue_num:
+        # Convert to string if it's a number
+        issue_num = str(issue_num) if isinstance(issue_num, int) else issue_num
 
     if issue_num:
         name = f"{agent_type} #{issue_num}"
     else:
         name = agent_type
 
-    # Use PR status or issue title as detail
-    detail = session.get("pr_status") or session.get("issue_title") or ""
+    # Use PR number, PR status, or issue title as detail
+    # Real lasso uses "prNumber", "issueTitle"; test data uses "pr_status", "issue_title"
+    detail = ""
+    pr_number = session.get("prNumber")
+    if pr_number:
+        detail = f"PR #{pr_number}"
+    else:
+        detail = session.get("pr_status") or session.get("issueTitle") or session.get("issue_title") or ""
 
     updated_at = session.get("updated_at") or session.get("timestamp")
     if not updated_at:
