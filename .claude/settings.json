@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/shen/clawd/lasso/hooks/post-tool-use.sh",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  }
+}

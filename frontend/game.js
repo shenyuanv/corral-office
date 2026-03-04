@@ -204,6 +204,9 @@ let agentMovement = {}; // agentId -> { targetX, targetY, startX, startY, progre
 let lastAgentsFetch = 0;
 const AGENTS_FETCH_INTERVAL = 2500;
 const AGENT_MOVE_DURATION = 800; // 毫秒，agent 移动时间
+let agentHistory = {}; // agentId -> [{ timestamp, state, area }, ...]
+let agentTooltip = null; // 当前显示的 agent tooltip
+let featureFlags = { badges: true, timeline: true, stats: true, notifications: true }; // 功能开关
 
 // agent 颜色配置
 const AGENT_COLORS = {
@@ -907,6 +910,10 @@ function fetchAgents() {
     .then(response => response.json())
     .then(data => {
       if (!Array.isArray(data)) return;
+
+      // 更新 agent 状态和触发通知
+      updateAgentStateAndNotifications(data);
+
       // 重置位置计数器
       areaPositionCounters = { breakroom: 0, writing: 0, error: 0 };
       // 处理每个 agent
@@ -923,6 +930,10 @@ function fetchAgents() {
           }
         }
       }
+
+      // 更新时间线和统计面板
+      updateTimelinePanel(data);
+      updateStatsOverlay(data);
     })
     .catch(error => {
       console.error('拉取 agents 失败:', error);
@@ -1066,10 +1077,28 @@ function renderAgent(agent) {
     statusDot.name = 'statusDot';
 
     container.add([sprite, statusDot, nameTag]);
+
+    // 添加 PR/CI 徽章
+    if (featureFlags.badges) {
+      addAgentBadges(container, agent);
+    }
+
+    // 使容器可交互
+    container.setInteractive(new Phaser.Geom.Rectangle(-64, -64, 128, 128), Phaser.Geom.Rectangle.Contains);
+    container.on('pointerdown', () => {
+      showAgentTooltip(agent, container.x, container.y);
+    });
+
     agents[agentId] = container;
 
     // 初始化运动状态
     agentMovement[agentId] = { targetX: baseX, targetY: baseY, progress: 1, spriteIndex };
+
+    // 初始化历史记录
+    if (!agentHistory[agentId]) {
+      agentHistory[agentId] = [];
+    }
+    agentHistory[agentId].push({ timestamp: Date.now(), state: agent.state || 'idle', area: agent.area || 'breakroom' });
   } else {
     // 更新 agent
     const container = agents[agentId];
@@ -1138,6 +1167,172 @@ function renderAgent(agent) {
       if (authStatus === 'offline') dotColor = 0x94a3b8;
       statusDot.setFillStyle(dotColor, alpha);
     }
+  }
+}
+
+// PR/CI 徽章配置
+const BADGE_EMOJIS = {
+  pr_created: '🔀',
+  ci_passing: '✅',
+  ci_failed: '❌',
+  waiting_review: '⏳',
+  approved: '✓',
+  merged: '✨'
+};
+
+// 添加 PR/CI 徽章
+function addAgentBadges(container, agent) {
+  const badges = [];
+  if (agent.prStatus) badges.push(agent.prStatus);
+  if (agent.ciStatus) badges.push(agent.ciStatus);
+
+  // 只显示最多2个徽章
+  for (let i = 0; i < Math.min(badges.length, 2); i++) {
+    const status = badges[i];
+    const emoji = BADGE_EMOJIS[status] || '•';
+    const badgeText = game.add.text(20 + i * 20, -40, emoji, {
+      fontFamily: 'Arial',
+      fontSize: '10px'
+    }).setOrigin(0.5);
+    badgeText.name = 'badge_' + status;
+    container.add(badgeText);
+  }
+}
+
+// 显示 agent 详情 tooltip
+function showAgentTooltip(agent, x, y) {
+  // 移除旧 tooltip
+  if (agentTooltip) {
+    agentTooltip.destroy();
+    agentTooltip = null;
+  }
+
+  const html = `
+    <div class="agent-tooltip" style="position: fixed; left: ${x + 20}px; top: ${y - 40}px; z-index: 10000;
+          background: rgba(0, 0, 0, 0.9); color: #fff; padding: 8px 12px; border-radius: 4px;
+          font-family: monospace; font-size: 11px; white-space: nowrap; border: 1px solid #fff;">
+      <div><strong>${agent.name}</strong></div>
+      <div>Type: ${agent.agentType || 'unknown'}</div>
+      <div>Status: ${agent.authStatus || 'pending'}</div>
+      <div>Area: ${agent.area || 'breakroom'}</div>
+      ${agent.prUrl ? `<div><a href="${agent.prUrl}" target="_blank" style="color:#0ff;">PR</a></div>` : ''}
+      ${agent.issueNumber ? `<div>Issue: #${agent.issueNumber}</div>` : ''}
+    </div>
+  `;
+
+  // 创建 DOM 元素
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  document.body.appendChild(div.firstChild);
+  agentTooltip = div.firstChild;
+
+  // 3秒后自动关闭
+  setTimeout(() => {
+    if (agentTooltip) {
+      agentTooltip.remove();
+      agentTooltip = null;
+    }
+  }, 3000);
+}
+
+// 显示通知效果（PR/CI 事件）
+function showNotificationEffect(agent, type) {
+  if (!featureFlags.notifications) return;
+
+  const container = agents[agent.agentId];
+  if (!container) return;
+
+  const emojis = {
+    pr_created: '🎉',
+    ci_failed: '⚠️',
+    merged: '✨'
+  };
+
+  const emoji = emojis[type] || '●';
+
+  // 创建漂浮的 emoji
+  const floatingText = game.add.text(container.x, container.y - 60, emoji, {
+    fontFamily: 'Arial',
+    fontSize: '24px'
+  }).setOrigin(0.5);
+
+  game.tweens.add({
+    targets: floatingText,
+    y: container.y - 120,
+    alpha: 0,
+    duration: 1500,
+    ease: 'Quad.easeOut',
+    onComplete: () => floatingText.destroy()
+  });
+}
+
+// 占位符函数，在 index.html 中实现
+function updateTimelinePanel(agents) {
+  if (window.updateTimelinePanel) {
+    window.updateTimelinePanel(agents);
+  }
+}
+
+function updateStatsOverlay(agents) {
+  if (window.updateStatsOverlay) {
+    window.updateStatsOverlay(agents);
+  }
+}
+
+// 跟踪 agent 状态变化
+let agentPreviousState = {}; // agentId -> { state, prStatus, ciStatus }
+
+// 更新 agent 历史记录并触发通知
+function updateAgentStateAndNotifications(agents) {
+  for (const agent of agents) {
+    const agentId = agent.agentId;
+    const prevState = agentPreviousState[agentId];
+
+    // 跟踪状态变化
+    if (!prevState) {
+      agentPreviousState[agentId] = {
+        state: agent.state,
+        prStatus: agent.prStatus,
+        ciStatus: agent.ciStatus,
+        timestamp: Date.now()
+      };
+      continue;
+    }
+
+    // 检测 PR 创建
+    if (agent.prStatus === 'pr_created' && prevState.prStatus !== 'pr_created') {
+      showNotificationEffect(agent, 'pr_created');
+    }
+
+    // 检测 CI 失败
+    if (agent.ciStatus === 'ci_failed' && prevState.ciStatus !== 'ci_failed') {
+      showNotificationEffect(agent, 'ci_failed');
+    }
+
+    // 检测合并
+    if (agent.prStatus === 'merged' && prevState.prStatus !== 'merged') {
+      showNotificationEffect(agent, 'merged');
+    }
+
+    // 更新历史记录
+    if (agent.state !== prevState.state) {
+      if (!agentHistory[agentId]) {
+        agentHistory[agentId] = [];
+      }
+      agentHistory[agentId].push({
+        timestamp: Date.now(),
+        state: agent.state || 'idle',
+        area: agent.area || 'breakroom'
+      });
+    }
+
+    // 保存当前状态
+    agentPreviousState[agentId] = {
+      state: agent.state,
+      prStatus: agent.prStatus,
+      ciStatus: agent.ciStatus,
+      timestamp: Date.now()
+    };
   }
 }
 

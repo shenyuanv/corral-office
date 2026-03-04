@@ -819,6 +819,298 @@
         .guest-agent-buttons button.leave-btn:hover {
             background: #6a2828;
         }
+        /* Timeline 面板 */
+        #timeline-panel {
+            position: relative;
+            width: 390px;
+            height: 300px;
+            background: #141722;
+            padding: 10px 10px 12px;
+            border-radius: 0;
+            border: 4px solid #0e1119;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow: hidden;
+        }
+        #timeline-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+            background-repeat: no-repeat;
+            background-size:
+                calc(50% - 14px) 2px, calc(50% - 14px) 2px,
+                2px calc(50% - 14px), 2px calc(50% - 14px),
+                calc(50% - 14px) 2px, calc(50% - 14px) 2px,
+                2px calc(50% - 14px), 2px calc(50% - 14px);
+            background-position:
+                9px 8px, calc(50% + 5px) 8px,
+                8px 9px, calc(100% - 10px) 9px,
+                9px calc(100% - 10px), calc(50% + 5px) calc(100% - 10px),
+                8px calc(50% + 5px), calc(100% - 10px) calc(50% + 5px);
+        }
+        #timeline-panel::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+            background-repeat: no-repeat;
+            background-size:
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px;
+            background-position:
+                left top, left top,
+                right top, right top,
+                left bottom, left bottom,
+                right bottom, right bottom;
+        }
+        #timeline-title {
+            color: #ffd700;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 1px;
+            padding: 6px 0;
+        }
+        #timeline-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        #timeline-container::-webkit-scrollbar { width: 6px; }
+        #timeline-container::-webkit-scrollbar-track { background: #1a1a2e; }
+        #timeline-container::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        .timeline-agent {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            background: #3a3f4f;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        .timeline-agent-name {
+            color: #fff;
+            flex-shrink: 0;
+            min-width: 60px;
+        }
+        .timeline-bars {
+            display: flex;
+            gap: 1px;
+            flex-grow: 1;
+            height: 16px;
+        }
+        .timeline-bar {
+            flex: 1;
+            border-radius: 2px;
+            transition: opacity 0.3s;
+        }
+        /* Stats 面板 */
+        #stats-panel {
+            position: relative;
+            width: 260px;
+            height: 300px;
+            background: #141722;
+            padding: 10px 10px 12px;
+            border-radius: 0;
+            border: 4px solid #0e1119;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow: hidden;
+        }
+        #stats-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+            background-repeat: no-repeat;
+            background-size:
+                calc(50% - 14px) 2px, calc(50% - 14px) 2px,
+                2px calc(50% - 14px), 2px calc(50% - 14px),
+                calc(50% - 14px) 2px, calc(50% - 14px) 2px,
+                2px calc(50% - 14px), 2px calc(50% - 14px);
+            background-position:
+                9px 8px, calc(50% + 5px) 8px,
+                8px 9px, calc(100% - 10px) 9px,
+                9px calc(100% - 10px), calc(50% + 5px) calc(100% - 10px),
+                8px calc(50% + 5px), calc(100% - 10px) calc(50% + 5px);
+        }
+        #stats-panel::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+            background-repeat: no-repeat;
+            background-size:
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px;
+            background-position:
+                left top, left top,
+                right top, right top,
+                left bottom, left bottom,
+                right bottom, right bottom;
+        }
+        #stats-title {
+            color: #ffd700;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 1px;
+            padding: 6px 0;
+        }
+        #stats-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            justify-content: center;
+        }
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: #3a3f4f;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #555;
+        }
+        .stat-label {
+            color: #9ca3af;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .stat-value {
+            color: #ffd700;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        /* Settings 面板 */
+        #settings-panel {
+            position: relative;
+            width: 260px;
+            height: 300px;
+            background: #141722;
+            padding: 10px 10px 12px;
+            border-radius: 0;
+            border: 4px solid #0e1119;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow: hidden;
+        }
+        #settings-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+            background-repeat: no-repeat;
+            background-size:
+                calc(50% - 14px) 2px, calc(50% - 14px) 2px,
+                2px calc(50% - 14px), 2px calc(50% - 14px),
+                calc(50% - 14px) 2px, calc(50% - 14px) 2px,
+                2px calc(50% - 14px), 2px calc(50% - 14px);
+            background-position:
+                9px 8px, calc(50% + 5px) 8px,
+                8px 9px, calc(100% - 10px) 9px,
+                9px calc(100% - 10px), calc(50% + 5px) calc(100% - 10px),
+                8px calc(50% + 5px), calc(100% - 10px) calc(50% + 5px);
+        }
+        #settings-panel::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+            background-repeat: no-repeat;
+            background-size:
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px;
+            background-position:
+                left top, left top,
+                right top, right top,
+                left bottom, left bottom,
+                right bottom, right bottom;
+        }
+        #settings-title {
+            color: #ffd700;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 1px;
+            padding: 6px 0;
+        }
+        #settings-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .settings-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 6px 8px;
+            background: #3a3f4f;
+            border-radius: 4px;
+            border: 1px solid #555;
+            color: #fff;
+            font-size: 12px;
+            user-select: none;
+        }
+        .settings-checkbox:hover {
+            background: #4a4f5f;
+            border-color: #ffd700;
+        }
+        .settings-checkbox input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            accent-color: #ffd700;
+        }
         /* Memo 区域 - 4:3 小正方形 */
         #memo-panel {
             position: relative;
@@ -1149,6 +1441,55 @@
             <div id="guest-agent-list">
                 <div style="color:#9ca3af;font-size:12px;text-align:center;padding:20px 0;">正在加载访客...</div>
             </div>
+        </div>
+
+        <!-- Timeline 面板 -->
+        <div id="timeline-panel">
+            <div id="timeline-title">任 务 时 线</div>
+            <div id="timeline-container">
+                <div style="color:#9ca3af;font-size:12px;text-align:center;padding:10px 0;">正在加载时间线...</div>
+            </div>
+        </div>
+
+        <!-- Stats 面板 -->
+        <div id="stats-panel">
+            <div id="stats-title">工 作 统 计</div>
+            <div id="stats-content">
+                <div class="stat-item">
+                    <div class="stat-label">活跃 Agent</div>
+                    <div class="stat-value" id="stat-active-agents">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">开启 PR</div>
+                    <div class="stat-value" id="stat-open-prs">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">成功率</div>
+                    <div class="stat-value" id="stat-success-rate">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings 面板 -->
+        <div id="settings-panel">
+            <div id="settings-title">功 能 设 置</div>
+            <div id="settings-content">
+                <label class="settings-checkbox">
+                    <input type="checkbox" id="toggle-badges" checked onchange="toggleFeature('badges')">
+                    <span>徽 章</span>
+                </label>
+                <label class="settings-checkbox">
+                    <input type="checkbox" id="toggle-timeline" checked onchange="toggleFeature('timeline')">
+                    <span>时 线</span>
+                </label>
+                <label class="settings-checkbox">
+                    <input type="checkbox" id="toggle-stats" checked onchange="toggleFeature('stats')">
+                    <span>统 计</span>
+                </label>
+                <label class="settings-checkbox">
+                    <input type="checkbox" id="toggle-notifications" checked onchange="toggleFeature('notifications')">
+                    <span>通 知</span>
+                </label>
             </div>
         </div>
     </div>
@@ -3815,6 +4156,91 @@ function toggleBrokerPanel() {
                         renderGuestAgentsInScene();
                     }
                 });
+        }
+
+        // 切换功能开关
+        function toggleFeature(feature) {
+            if (window.featureFlags) {
+                window.featureFlags[feature] = !window.featureFlags[feature];
+                // 更新对应的 DOM 元素显示
+                const panels = {
+                    timeline: 'timeline-panel',
+                    stats: 'stats-panel',
+                    badges: null,  // 徽章在游戏中直接控制
+                    notifications: null  // 通知在游戏中直接控制
+                };
+                if (panels[feature]) {
+                    const panel = document.getElementById(panels[feature]);
+                    if (panel) {
+                        panel.style.display = window.featureFlags[feature] ? 'flex' : 'none';
+                    }
+                }
+            }
+        }
+
+        // 更新时间线面板
+        function updateTimelinePanel(agents) {
+            const container = document.getElementById('timeline-container');
+            if (!container) return;
+
+            const stateColors = {
+                idle: '#64748b',
+                writing: '#22c55e',
+                researching: '#3b82f6',
+                executing: '#f59e0b',
+                syncing: '#06b6d4',
+                error: '#ef4444'
+            };
+
+            let html = '';
+            for (const agent of agents) {
+                if (!agent.agentId) continue;
+                const history = window.agentHistory[agent.agentId] || [];
+
+                if (history.length === 0) {
+                    html += `<div class="timeline-agent">
+                        <div class="timeline-agent-name">${agent.name || 'Unknown'}</div>
+                        <div class="timeline-bars" style="flex-grow:1; height:16px; background:#555; border-radius:2px;"></div>
+                    </div>`;
+                    continue;
+                }
+
+                // 显示最近状态变化
+                const recentHistory = history.slice(-10);
+                const barHtml = recentHistory.map(h => {
+                    const color = stateColors[h.state] || '#64748b';
+                    return `<div style="flex-grow:1; height:16px; background:${color}; border-radius:2px;" title="${h.state}"></div>`;
+                }).join('');
+
+                html += `<div class="timeline-agent">
+                    <div class="timeline-agent-name">${agent.name || 'Unknown'}</div>
+                    <div class="timeline-bars" style="flex-grow:1; display:flex; gap:2px;">${barHtml}</div>
+                </div>`;
+            }
+
+            container.innerHTML = html || '<div style="color:#9ca3af;font-size:12px;text-align:center;padding:10px 0;">暂无数据</div>';
+        }
+
+        // 更新统计面板
+        function updateStatsOverlay(agents) {
+            if (!Array.isArray(agents)) return;
+
+            // 统计活跃 agent 数
+            const activeCount = agents.filter(a => a.area !== 'breakroom' && a.authStatus !== 'offline').length;
+            const activeEl = document.getElementById('stat-active-agents');
+            if (activeEl) activeEl.textContent = activeCount;
+
+            // 统计开启的 PR
+            const openPRs = agents.filter(a => a.prStatus && a.prStatus !== 'merged').length;
+            const prEl = document.getElementById('stat-open-prs');
+            if (prEl) prEl.textContent = openPRs;
+
+            // 成功率（根据 CI 状态）
+            const withCI = agents.filter(a => a.ciStatus).length;
+            const passed = agents.filter(a => a.ciStatus === 'ci_passing').length;
+            const successRate = withCI > 0 ? Math.round((passed / withCI) * 100) : '--';
+            const rateEl = document.getElementById('stat-success-rate');
+            if (rateEl) rateEl.textContent = typeof successRate === 'number' ? successRate + '%' : '--';
         }
 
         // 初始化：先检测 WebP 支持，再启动游戏
