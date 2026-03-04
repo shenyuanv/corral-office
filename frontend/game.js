@@ -202,6 +202,7 @@ const TYPEWRITER_DELAY = 50;
 let agents = {}; // agentId -> sprite/container
 let lastAgentsFetch = 0;
 const AGENTS_FETCH_INTERVAL = 2500;
+let agentHistory = {}; // agentId -> { states: [], prStatuses: [], ciStatuses: [] }
 
 // agent 颜色配置
 const AGENT_COLORS = {
@@ -914,12 +915,153 @@ function getAreaPosition(area) {
   return positions[idx];
 }
 
+// Badge rendering function
+function createAgentBadges(container, agent, baseX, baseY) {
+  // Only create badges if feature is enabled
+  if (typeof lassoUIState !== 'undefined' && !lassoUIState.showBadges) {
+    return;
+  }
+
+  const badgeSpacing = 10;
+  let badgeX = -25;
+
+  // PR status badge
+  if (agent.prStatus) {
+    const badgeSymbol = agent.prStatus === 'created' ? '🔀' :
+                       agent.prStatus === 'approved' ? '✓' :
+                       agent.prStatus === 'waiting' ? '⏳' :
+                       agent.prStatus;
+    const badge = game.add.text(badgeX, 16, badgeSymbol, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '12px'
+    }).setOrigin(0.5);
+    badge.name = 'prBadge';
+    container.add(badge);
+    badgeX += badgeSpacing;
+  }
+
+  // CI status badge
+  if (agent.ciStatus) {
+    const badgeSymbol = agent.ciStatus === 'passing' ? '✅' :
+                       agent.ciStatus === 'failed' ? '❌' :
+                       agent.ciStatus;
+    const badge = game.add.text(badgeX, 16, badgeSymbol, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '12px'
+    }).setOrigin(0.5);
+    badge.name = 'ciBadge';
+    container.add(badge);
+  }
+}
+
+// Update badges on existing agent
+function updateAgentBadges(container, agent) {
+  // Remove old badges
+  const oldBadges = container.getAll().filter(c => c.name === 'prBadge' || c.name === 'ciBadge');
+  oldBadges.forEach(b => b.destroy());
+
+  // Recreate badges
+  if (agent.prStatus || agent.ciStatus) {
+    createAgentBadges(container, agent, container.x, container.y);
+  }
+}
+
+// Show agent tooltip
+function showAgentTooltip(agent, x, y) {
+  const existingTooltip = document.getElementById('agent-tooltip');
+  if (existingTooltip) existingTooltip.remove();
+
+  const tooltip = document.createElement('div');
+  tooltip.id = 'agent-tooltip';
+  tooltip.style.cssText = `
+    position: fixed;
+    left: ${x + 30}px;
+    top: ${y - 40}px;
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid #ffd700;
+    border-radius: 4px;
+    padding: 12px;
+    color: #fff;
+    font-family: 'ArkPixel', monospace;
+    font-size: 12px;
+    z-index: 5000;
+    max-width: 250px;
+    line-height: 1.4;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  `;
+
+  const duration = agent.updated_at ? Math.floor((Date.now() - new Date(agent.updated_at).getTime()) / 1000) : 0;
+  const durationStr = duration < 60 ? `${duration}s` : duration < 3600 ? `${Math.floor(duration / 60)}m` : `${Math.floor(duration / 3600)}h`;
+
+  tooltip.innerHTML = `
+    <div style="color: #ffd700; margin-bottom: 8px; font-weight: bold;">${agent.name || 'Agent'}</div>
+    <div style="margin-bottom: 4px;"><span style="color: #94a3b8;">Type:</span> ${agent.isMain ? 'Main' : 'Guest'}</div>
+    <div style="margin-bottom: 4px;"><span style="color: #94a3b8;">State:</span> ${agent.state || 'unknown'}</div>
+    <div style="margin-bottom: 4px;"><span style="color: #94a3b8;">Duration:</span> ${durationStr}</div>
+    ${agent.detail ? `<div style="margin-bottom: 4px;"><span style="color: #94a3b8;">Detail:</span> ${agent.detail}</div>` : ''}
+    ${agent.prUrl ? `<div style="margin-top: 8px;"><a href="${agent.prUrl}" target="_blank" style="color: #60a5fa; text-decoration: underline;">View PR</a></div>` : ''}
+  `;
+
+  document.body.appendChild(tooltip);
+
+  setTimeout(() => {
+    if (tooltip && tooltip.parentNode) tooltip.remove();
+  }, 8000);
+}
+
 function renderAgent(agent) {
   const agentId = agent.agentId;
   const name = agent.name || 'Agent';
   const area = agent.area || 'breakroom';
   const authStatus = agent.authStatus || 'pending';
   const isMain = !!agent.isMain;
+
+  // Track agent history for timeline and notification effects
+  if (!agentHistory[agentId]) {
+    agentHistory[agentId] = {
+      states: [agent.state || 'idle'],
+      prStatuses: [agent.prStatus || null],
+      ciStatuses: [agent.ciStatus || null],
+      lastPRStatus: null,
+      lastCIStatus: null
+    };
+  }
+
+  const history = agentHistory[agentId];
+  const previousPRStatus = history.lastPRStatus;
+  const previousCIStatus = history.lastCIStatus;
+
+  // Update history
+  history.states.push(agent.state || 'idle');
+  history.prStatuses.push(agent.prStatus || null);
+  history.ciStatuses.push(agent.ciStatus || null);
+  history.lastPRStatus = agent.prStatus || null;
+  history.lastCIStatus = agent.ciStatus || null;
+
+  // Keep history to last 100 entries
+  if (history.states.length > 100) {
+    history.states.shift();
+    history.prStatuses.shift();
+    history.ciStatuses.shift();
+  }
+
+  // Trigger notification effects for status changes
+  if (typeof showNotificationEffect !== 'undefined') {
+    // Get container position for notification
+    const container = agents[agentId];
+    const notifX = container ? container.x : 640;
+    const notifY = container ? container.y : 360;
+
+    if (previousPRStatus !== agent.prStatus && agent.prStatus === 'created') {
+      showNotificationEffect('pr-created', notifX, notifY);
+    }
+    if (previousCIStatus !== agent.ciStatus && agent.ciStatus === 'failed') {
+      showNotificationEffect('ci-failed', notifX, notifY);
+    }
+    if (previousPRStatus !== 'approved' && agent.prStatus === 'approved') {
+      showNotificationEffect('merged', notifX, notifY);
+    }
+  }
 
   // 获取这个 agent 在区域里的位置
   const pos = getAreaPosition(area);
@@ -940,6 +1082,7 @@ function renderAgent(agent) {
     // 新建 agent
     const container = game.add.container(baseX, baseY);
     container.setDepth(1200 + (isMain ? 100 : 0)); // 放到最顶层！
+    container.name = agentId;
 
     // 像素小人：用星星图标，更明显
     const starIcon = game.add.text(0, 0, '⭐', {
@@ -958,6 +1101,11 @@ function renderAgent(agent) {
       backgroundColor: 'rgba(255,255,255,0.95)'
     }).setOrigin(0.5);
     nameTag.name = 'nameTag';
+    nameTag.setInteractive({ useHandCursor: true });
+    nameTag.on('pointerdown', () => {
+      const worldCoords = game.input.activePointer.positionToCamera(game.cameras.main);
+      showAgentTooltip(agent, worldCoords.x, worldCoords.y);
+    });
 
     // 状态小点（绿色/黄色/红色）
     let dotColor = 0x64748b;
@@ -970,6 +1118,12 @@ function renderAgent(agent) {
     statusDot.name = 'statusDot';
 
     container.add([starIcon, statusDot, nameTag]);
+
+    // Add badges
+    if (agent.prStatus || agent.ciStatus) {
+      createAgentBadges(container, agent, baseX, baseY);
+    }
+
     agents[agentId] = container;
   } else {
     // 更新 agent
@@ -994,6 +1148,9 @@ function renderAgent(agent) {
       if (authStatus === 'offline') dotColor = 0x94a3b8;
       statusDot.fillColor = dotColor;
     }
+
+    // Update badges
+    updateAgentBadges(container, agent);
   }
 }
 

@@ -819,6 +819,191 @@
         .guest-agent-buttons button.leave-btn:hover {
             background: #6a2828;
         }
+        /* Timeline 面板 */
+        #timeline-panel {
+            position: relative;
+            width: 400px;
+            height: 300px;
+            background: #141722;
+            padding: 10px 10px 12px;
+            border-radius: 0;
+            border: 4px solid #0e1119;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow: hidden;
+        }
+        #timeline-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+            background-repeat: no-repeat;
+            background-size:
+                calc(50% - 14px) 2px, calc(50% - 14px) 2px,
+                2px calc(50% - 14px), 2px calc(50% - 14px),
+                calc(50% - 14px) 2px, calc(50% - 14px) 2px,
+                2px calc(50% - 14px), 2px calc(50% - 14px);
+            background-position:
+                9px 8px, calc(50% + 5px) 8px,
+                8px 9px, calc(100% - 10px) 9px,
+                9px calc(100% - 10px), calc(50% + 5px) calc(100% - 10px),
+                8px calc(50% + 5px), calc(100% - 10px) calc(50% + 5px);
+        }
+        #timeline-panel::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+            background-repeat: no-repeat;
+            background-size:
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px;
+            background-position:
+                left top, left top,
+                right top, right top,
+                left bottom, left bottom,
+                right bottom, right bottom;
+        }
+        #timeline-title {
+            color: #ffd700;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 1px;
+            padding: 6px 0 10px;
+            margin-bottom: 0;
+        }
+        #timeline-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding-right: 4px;
+            color: #cbd5e1;
+            font-size: 11px;
+        }
+        .timeline-bar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 2px;
+        }
+        .timeline-bar-name {
+            min-width: 60px;
+            color: #ffd700;
+            font-weight: bold;
+        }
+        .timeline-bar-progress {
+            flex-grow: 1;
+            height: 16px;
+            background: #1a1a2e;
+            border-radius: 2px;
+            display: flex;
+            overflow: hidden;
+        }
+        .timeline-segment {
+            height: 100%;
+            flex-grow: 1;
+            position: relative;
+        }
+        .timeline-segment.working { background: #10b981; }
+        .timeline-segment.pr { background: #3b82f6; }
+        .timeline-segment.error { background: #ef4444; }
+        .timeline-segment.idle { background: #6b7280; }
+
+        /* Stats 面板 */
+        #stats-panel {
+            position: relative;
+            width: 280px;
+            height: 300px;
+            background: #141722;
+            padding: 10px 10px 12px;
+            border-radius: 0;
+            border: 4px solid #0e1119;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow: hidden;
+        }
+        #stats-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+            background-repeat: no-repeat;
+            background-size:
+                calc(50% - 14px) 2px, calc(50% - 14px) 2px,
+                2px calc(50% - 14px), 2px calc(50% - 14px),
+                calc(50% - 14px) 2px, calc(50% - 14px) 2px,
+                2px calc(50% - 14px), 2px calc(50% - 14px);
+            background-position:
+                9px 8px, calc(50% + 5px) 8px,
+                8px 9px, calc(100% - 10px) 9px,
+                9px calc(100% - 10px), calc(50% + 5px) calc(100% - 10px),
+                8px calc(50% + 5px), calc(100% - 10px) calc(50% + 5px);
+        }
+        #stats-panel::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f),
+                linear-gradient(#1a1b2f, #1a1b2f), linear-gradient(#1a1b2f, #1a1b2f);
+            background-repeat: no-repeat;
+            background-size:
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px,
+                9px 4px, 4px 9px;
+            background-position:
+                left top, left top,
+                right top, right top,
+                left bottom, left bottom,
+                right bottom, right bottom;
+        }
+        #stats-title {
+            color: #ffd700;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 1px;
+            padding: 6px 0 10px;
+            margin-bottom: 0;
+        }
+        #stats-content {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #cbd5e1;
+            font-size: 12px;
+        }
         /* Memo 区域 - 4:3 小正方形 */
         #memo-panel {
             position: relative;
@@ -1149,8 +1334,53 @@
             <div id="guest-agent-list">
                 <div style="color:#9ca3af;font-size:12px;text-align:center;padding:20px 0;">正在加载访客...</div>
             </div>
+        </div>
+
+        <!-- Timeline 面板 -->
+        <div id="timeline-panel" style="display:none;">
+            <div id="timeline-title">时间线</div>
+            <div id="timeline-content">
+                <div style="color:#9ca3af;font-size:12px;text-align:center;padding:20px 0;">加载中...</div>
             </div>
         </div>
+
+        <!-- Stats 面板 -->
+        <div id="stats-panel" style="display:none;">
+            <div id="stats-title">统计</div>
+            <div id="stats-content">
+                <div style="color:#9ca3af;font-size:12px;padding:10px;">
+                    <div>活跃Agent: <span id="stats-active-agents">0</span></div>
+                    <div>开放PR: <span id="stats-open-prs">0</span></div>
+                    <div>成功率: <span id="stats-success-rate">0%</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings 按钮 -->
+    <div id="lasso-settings-btn" style="position:fixed; bottom:20px; right:20px; z-index:1000; cursor:pointer; padding:8px 12px; background:#1f2937; border:1px solid #475569; border-radius:4px; color:#e5e7eb; font-family:ArkPixel,monospace; font-size:12px;">
+        ⚙️ Lasso设置
+    </div>
+
+    <!-- Settings 面板 -->
+    <div id="lasso-settings-panel" style="display:none; position:fixed; bottom:70px; right:20px; background:#111827; border:2px solid #ffd700; border-radius:4px; padding:12px; z-index:1001; min-width:200px; font-family:ArkPixel,monospace; font-size:12px; color:#e5e7eb;">
+        <div style="margin-bottom:8px; color:#ffd700; font-weight:bold;">Lasso UI设置</div>
+        <label style="display:flex; align-items:center; margin-bottom:6px; cursor:pointer;">
+            <input type="checkbox" id="toggle-badges" checked style="margin-right:6px;">
+            <span>PR/CI徽章</span>
+        </label>
+        <label style="display:flex; align-items:center; margin-bottom:6px; cursor:pointer;">
+            <input type="checkbox" id="toggle-timeline" checked style="margin-right:6px;">
+            <span>时间线</span>
+        </label>
+        <label style="display:flex; align-items:center; margin-bottom:6px; cursor:pointer;">
+            <input type="checkbox" id="toggle-stats" checked style="margin-right:6px;">
+            <span>统计信息</span>
+        </label>
+        <label style="display:flex; align-items:center; margin-bottom:6px; cursor:pointer;">
+            <input type="checkbox" id="toggle-notifications" checked style="margin-right:6px;">
+            <span>通知效果</span>
+        </label>
     </div>
     
     <div id="asset-highlight"></div>
@@ -4791,6 +5021,201 @@ function toggleBrokerPanel() {
         }
 
         // 假 Agent 气泡逻辑已移除，统一以真实 /agents 数据为准
+
+        // ===== Lasso UI 功能 =====
+        // 全局状态变量
+        const lassoUIState = {
+            showBadges: true,
+            showTimeline: true,
+            showStats: true,
+            showNotifications: true,
+            agents: {},
+            timeline: {}
+        };
+
+        // 初始化设置面板
+        function initLassoSettings() {
+            const settingsBtn = document.getElementById('lasso-settings-btn');
+            const settingsPanel = document.getElementById('lasso-settings-panel');
+
+            settingsBtn.addEventListener('click', () => {
+                settingsPanel.style.display = settingsPanel.style.display === 'none' ? 'block' : 'none';
+            });
+
+            // 关闭面板当点击外部
+            document.addEventListener('click', (e) => {
+                if (e.target !== settingsBtn && !settingsPanel.contains(e.target)) {
+                    settingsPanel.style.display = 'none';
+                }
+            });
+
+            // 复选框事件
+            const toggleBadges = document.getElementById('toggle-badges');
+            const toggleTimeline = document.getElementById('toggle-timeline');
+            const toggleStats = document.getElementById('toggle-stats');
+            const toggleNotifications = document.getElementById('toggle-notifications');
+
+            const timelinePanel = document.getElementById('timeline-panel');
+            const statsPanel = document.getElementById('stats-panel');
+
+            toggleBadges.addEventListener('change', () => {
+                lassoUIState.showBadges = toggleBadges.checked;
+            });
+
+            toggleTimeline.addEventListener('change', () => {
+                lassoUIState.showTimeline = toggleTimeline.checked;
+                timelinePanel.style.display = toggleTimeline.checked ? 'flex' : 'none';
+            });
+
+            toggleStats.addEventListener('change', () => {
+                lassoUIState.showStats = toggleStats.checked;
+                statsPanel.style.display = toggleStats.checked ? 'flex' : 'none';
+            });
+
+            toggleNotifications.addEventListener('change', () => {
+                lassoUIState.showNotifications = toggleNotifications.checked;
+            });
+
+            // 初始显示状态
+            timelinePanel.style.display = toggleTimeline.checked ? 'flex' : 'none';
+            statsPanel.style.display = toggleStats.checked ? 'flex' : 'none';
+        }
+
+        // 更新统计信息
+        function updateLassoStats(agents) {
+            if (!lassoUIState.showStats) return;
+
+            const activeCount = agents.filter(a => a.authStatus === 'approved').length;
+            const prCount = agents.filter(a => a.prStatus && a.prStatus !== 'none').length;
+            const totalPRs = agents.filter(a => a.prStatus).length;
+            const successRate = totalPRs > 0 ? Math.round((prCount / totalPRs) * 100) : 0;
+
+            document.getElementById('stats-active-agents').textContent = activeCount;
+            document.getElementById('stats-open-prs').textContent = prCount;
+            document.getElementById('stats-success-rate').textContent = successRate + '%';
+        }
+
+        // 更新时间线
+        function updateLassoTimeline(agents) {
+            if (!lassoUIState.showTimeline) return;
+
+            const timelineContent = document.getElementById('timeline-content');
+            timelineContent.innerHTML = '';
+
+            agents.forEach(agent => {
+                const barDiv = document.createElement('div');
+                barDiv.className = 'timeline-bar';
+
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'timeline-bar-name';
+                nameDiv.textContent = (agent.name || 'Agent').substring(0, 8);
+
+                const progressDiv = document.createElement('div');
+                progressDiv.className = 'timeline-bar-progress';
+
+                // 添加状态段
+                const stateClass = agent.state ? `timeline-segment ${agent.state}` : 'timeline-segment idle';
+                const segmentDiv = document.createElement('div');
+                segmentDiv.className = stateClass;
+                segmentDiv.style.flex = '1';
+                progressDiv.appendChild(segmentDiv);
+
+                barDiv.appendChild(nameDiv);
+                barDiv.appendChild(progressDiv);
+                timelineContent.appendChild(barDiv);
+            });
+
+            if (agents.length === 0) {
+                timelineContent.innerHTML = '<div style="text-align:center;padding:20px 0;">暂无Agent数据</div>';
+            }
+        }
+
+        // 显示通知效果
+        function showNotificationEffect(type, x, y) {
+            if (!lassoUIState.showNotifications) return;
+
+            let emoji = '';
+            let duration = 2000;
+
+            if (type === 'pr-created') {
+                emoji = '🎉';
+                duration = 2500;
+            } else if (type === 'ci-failed') {
+                emoji = '⚠️';
+                duration = 2500;
+            } else if (type === 'merged') {
+                emoji = '✨';
+                duration = 2000;
+            }
+
+            if (!emoji) return;
+
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                left: ${x}px;
+                top: ${y}px;
+                font-size: 48px;
+                pointer-events: none;
+                animation: notification-pop 0.6s ease-out forwards;
+                z-index: 4999;
+            `;
+            notification.textContent = emoji;
+            document.body.appendChild(notification);
+
+            setTimeout(() => notification.remove(), duration);
+        }
+
+        // 添加通知动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes notification-pop {
+                0% {
+                    opacity: 1;
+                    transform: scale(0.5) translateY(0);
+                }
+                100% {
+                    opacity: 0;
+                    transform: scale(1.5) translateY(-60px);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // 挂钩到 fetchAgents 结果
+        const originalFetchAgents = window.fetchAgents || function() {};
+        window.fetchAgents = function() {
+            originalFetchAgents.call(this);
+
+            // 更新Lasso UI
+            if (typeof agents !== 'undefined') {
+                const agentsList = Object.values(agents).map(container => {
+                    const agentId = container.name;
+                    const allAgents = window.allAgentsData || [];
+                    return allAgents.find(a => a.agentId === agentId) || {};
+                }).filter(a => a.agentId);
+
+                updateLassoStats(agentsList);
+                updateLassoTimeline(agentsList);
+            }
+        };
+
+        // 需要保存agents数据供Lasso UI使用
+        const originalRenderAgent = window.renderAgent;
+        window.renderAgent = function(agent) {
+            window.allAgentsData = window.allAgentsData || [];
+            const idx = window.allAgentsData.findIndex(a => a.agentId === agent.agentId);
+            if (idx >= 0) {
+                window.allAgentsData[idx] = agent;
+            } else {
+                window.allAgentsData.push(agent);
+            }
+
+            return originalRenderAgent.call(this, agent);
+        };
+
+        // 启动游戏前初始化设置
+        initLassoSettings();
 
         // 启动游戏
         initGame();
